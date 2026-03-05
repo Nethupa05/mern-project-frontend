@@ -1,10 +1,22 @@
+import { Route, Routes } from 'react-router-dom'
+import Headers from '../components/header'     
+import ProductPage from './Client/productsPage.jsx'
+import ProductOverviewPage from './Client/productOverview.jsx'
+
 export default function HomePage(){
     return(
-        <div className='w-full h-screen bg-red-100 flex flex-col justify-evenly items-center'>
-            <h1 className='text-4xl font-bold text-red-900'>Home Page</h1>
-            <p className='text-lg text-red-700'>Welcome to the home page. Please navigate to the login or sign up page to access your account.</p>
-            <button className='px-4 py-2 bg-blue-600 text-white rounded'>Go to Login</button>
-            <button className='px-4 py-2 bg-green-600 text-white rounded'>Go to Sign Up</button>
+        <div className='w-full h-screen flex flex-col items-center'>
+            <Headers/>
+            <div className="w-full h-[calc(100vh-80px)] flex flex-col items-center">
+                <Routes path="/*">
+                    <Route path="/" element={<h1>Home Page</h1>}/>
+                    <Route path="/products" element={<ProductPage/>}/>
+                    <Route path="/about" element={<h1>About Page</h1>}/>
+                    <Route path="/contact" element={<h1>Contact Page</h1>}/>
+                    <Route path="/overview/:id" element={<ProductOverviewPage/>}/>
+                    <Route path="/*" element={<h1>404 Not Found</h1>}/>
+                </Routes>
+            </div>
         </div>
     )
-}
+} 
