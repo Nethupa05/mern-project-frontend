@@ -1,49 +1,51 @@
-import { useEffect,useState } from "react"
-import {useParams} from  "react-router-dom"
+import { useEffect, useState } from "react"
+import { useParams,useNavigate } from "react-router-dom"
 import axios from "axios"
 import toast from "react-hot-toast"
 import ImageSlider from "../../components/imageSlider"
 import Loading from "../../components/loading"
 import { addToCart, getCart } from "../../utils/cart"
+// import LoadingAnimation from "../../components/LoadingAnimation";
 
-export default function ProductOverviewPage(){
+export default function ProductOverviewPage() {
     const params = useParams()
     const productId = params.id
-    const [status , setStatus] = useState("loading")
-    const [product , setProducts] = useState(null) 
+    const [status, setStatus] = useState("loading")
+    const [product, setProducts] = useState(null)
+    const navigate = useNavigate()
 
     useEffect(
-        ()=>{
-            axios.get(import.meta.env.VITE_BACKEND_URL+"/api/products/"+productId).then(
-                (response)=>{
+        () => {
+            axios.get(import.meta.env.VITE_BACKEND_URL + "/api/products/" + productId).then(
+                (response) => {
                     console.log(response.data)
                     setProducts(response.data)
                     setStatus("success")
                 }
             ).catch(
-                (error)=>{
+                (error) => {
                     console.log(error)
                     setStatus("error")
                     toast.error("Error fetching product details")
                 }
             )
         }
-    ,[])
+        , [])
 
-    return(
+    return (
         <>
             {status == "success" && (
                 <div className=" w-full h-full flex">
                     <div className="w-[50%] h-full flex justify-center items-center">
-                        <ImageSlider images = {product.images}/>
+                        <ImageSlider images={product.images} />
                     </div>
                     <div className="w-[50%] h-full flex justify-center items-center">
                         <div className="w-[500px] h-[600px] flex flex-col items-center ">
                             <h1 className="w-full text-center text-4xl text-secondary font-semibold ">{product.name}
                                 {
-                                    product.altNames.map((altName,index)=>{
-                                        return(
-                                            <span key={index} className="text-4xl text-gray-600 font-normal" >{" | "+altName}</span>
+                                    product.altNames.map((altName, index) => {
+                                        return (
+                                            <span key={index} className="text-4xl text-gray-600 font-normal" >{" "}{" | " + altName}</span>
                                         )
                                     })
                                 }
@@ -52,32 +54,49 @@ export default function ProductOverviewPage(){
                             <p className="w-full text-center my-2 text-md text-gray-600 font-semibold">{product.description}</p>
                             {
                                 product.labelledPrice > product.sellingPrice ?
-                                <div>
-                                    <span className="text-4xl mx-4 text-gray-500 line-through">{product.labelledPrice.toFixed(2)}</span>
-                                    <span className="text-4xl mx-4 font-bold text-accent">{product.sellingPrice.toFixed(2)}</span>
-                                </div>
-                                :<span className="text-4xl mx-4 font-bold text-accent">{product.sellingPrice.toFixed(2)}</span>
+                                    <div>
+                                        <span className="text-4xl mx-4 text-gray-500 line-through">{product.labelledPrice.toFixed(2)}</span>
+                                        <span className="text-4xl mx-4 font-bold text-accent">{product.sellingPrice.toFixed(2)}</span>
+                                    </div>
+                                    : <span className="text-4xl mx-4 font-bold text-accent">{product.sellingPrice.toFixed(2)}</span>
                             }
                             <div className="w-full flex justify-between items-center mt-4">
-                                <button className="w-[200px] h-[50-px] mx-4 text-2xl cursor-pointer bg-accent text-white rounded-2xl hover:bg-accent/80 transition-all duration-300 " onClick={()=>{
+                                <button className="w-[200px] h-[50-px] mx-4 text-2xl cursor-pointer bg-accent text-white rounded-2xl hover:bg-accent/80 transition-all duration-300 " onClick={() => {
                                     // localStorage.removeItem("cart")
                                     console.log("Old Cart")
                                     console.log(getCart())
-                                    addToCart(product,1)
+                                    addToCart(product, 1)
                                     console.log("New Cart")
                                     console.log(getCart())
                                 }}>Add to Cart</button>
-                                <button className="w-[200px] h-[50-px] mx-4 text-2xl cursor-pointer bg-accent text-white rounded-2xl hover:bg-accent/80 transition-all duration-300 ">Buy Now</button>
+                                <button className="w-[200px] h-[50-px] mx-4 text-2xl cursor-pointer bg-accent text-white rounded-2xl hover:bg-accent/80 transition-all duration-300"
+                                    onClick={() => {
+                                        navigate("/checkout", {
+                                            state: {
+                                                cart: [
+                                                    {
+                                                        productId: product.productId,
+                                                        name: product.name,
+                                                        image: product.images[0],
+                                                        sellingPrice: product.sellingPrice,
+                                                        labelledPrice: product.labelledPrice,
+                                                        qty: 1
+                                                    }
+                                                ]
+                                            }
+                                        })
+                                    }}>Buy Now</button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
             {
-                status == "loading" && <Loading/>
+                status == "loading" && <Loading />
+                // status == "loading" && <LoadingAnimation/>
             }
         </>
 
-        
+
     )
 }

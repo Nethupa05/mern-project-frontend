@@ -46,10 +46,11 @@ export default function ProductCard({ product }) {
 
           {/* Button */}
           <button
-            onClick={(e) => e.preventDefault()}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-1 rounded-md"
+            disabled={!product.isAvailable || product.stock <= 0}
+            className="px-3 py-1 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 transition"
           >
-            Buy Now
+
+            {product.isAvailable && product.stock > 0 ? "Add to Cart" : "Unavailable"}
           </button>
 
         </div>

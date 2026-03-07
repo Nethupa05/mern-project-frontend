@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import UserData from "./userData"
 import { useNavigate } from 'react-router-dom'
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function Header(){
     const navigate = useNavigate()
@@ -18,8 +19,10 @@ export default function Header(){
                 
             </div>
 
-            <div className="w-[80px] bg-blue-600 ">
-
+            <div className="w-[80px] flex jestify-center items-center ">
+                <Link to="/cart" className="text-2xl font-bold">
+                    <FaShoppingCart />
+                </Link>
             </div>
         </header>
     )

@@ -6,7 +6,7 @@ import axios from "axios"
 import { useNavigate } from "react-router-dom"
 
 export default function EditProductPage(){
-     const location = useLocation()
+    const location = useLocation()
     const [productId, setProductId] = useState(location.state.productId)
     const [name, setName] = useState(location.state.name)
     const [altNames, setAltNames] = useState(location.state.altNames.join(","))
