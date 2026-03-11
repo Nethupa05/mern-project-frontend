@@ -4,6 +4,7 @@ import ProductPage from './Client/productsPage.jsx'
 import ProductOverviewPage from './Client/productOverview.jsx'
 import CartPage from './Client/cart.jsx'
 import CheckoutPage from './Client/checkout.jsx'
+import Footer from '../components/footer.jsx'
 
 export default function HomePage(){
     return(
@@ -21,6 +22,7 @@ export default function HomePage(){
                     <Route path="/*" element={<h1>404 Not Found</h1>}/>
                 </Routes>
             </div>
+            <Footer/>
         </div>
     )
 } 
