@@ -25,6 +25,8 @@ import AddProductPage from "./admin/addProductPage";
 import AdminProductsPage from "./admin/ProductPage";
 import EditProductPage from "./admin/productsEditPage";
 import AdminOrdersPage from "./admin/adminOrdersPage";
+import AdminUsersPage from "./admin/AdminUsersPage"
+import AdminMessagesPage from "./admin/AdminMessagesPage";
 
 export default function AdminPage(){
     const location = useLocation()
@@ -470,24 +472,8 @@ export default function AdminPage(){
                             } />
                             <Route path="/products" element={<AdminProductsPage isDarkMode={isDarkMode} />} />
                             <Route path="/orders" element={<AdminOrdersPage isDarkMode={isDarkMode} />} />
-                            <Route path="/users" element={
-                                <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg md:rounded-xl shadow-lg p-6 md:p-8 h-full flex items-center justify-center`}>
-                                    <div className="text-center">
-                                        <FaUsers className={`text-4xl md:text-6xl ${isDarkMode ? 'text-gray-600' : 'text-gray-300'} mx-auto mb-4`} />
-                                        <h2 className={`text-xl md:text-2xl font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>Users Page</h2>
-                                        <p className={`text-sm md:text-base ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mt-2`}>Coming Soon</p>
-                                    </div>
-                                </div>
-                            } />
-                            <Route path="/reviews" element={
-                                <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg md:rounded-xl shadow-lg p-6 md:p-8 h-full flex items-center justify-center`}>
-                                    <div className="text-center">
-                                        <FaStar className={`text-4xl md:text-6xl ${isDarkMode ? 'text-gray-600' : 'text-gray-300'} mx-auto mb-4`} />
-                                        <h2 className={`text-xl md:text-2xl font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>Reviews Page</h2>
-                                        <p className={`text-sm md:text-base ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} mt-2`}>Coming Soon</p>
-                                    </div>
-                                </div>
-                            } />
+                            <Route path="/users" element={<AdminUsersPage isDarkMode={isDarkMode} />} />
+                            <Route path="/reviews" element={<AdminMessagesPage isDarkMode={isDarkMode} />} />
                             <Route path="/add-product" element={<AddProductPage isDarkMode={isDarkMode} />} />
                             <Route path="/edit-product" element={<EditProductPage isDarkMode={isDarkMode} />} />
                         </Routes>
