@@ -4,7 +4,7 @@ import Headers from '../components/header'
 import ProductPage from './Client/productsPage.jsx'
 import ProductOverviewPage from './Client/productOverview.jsx'
 import CartPage from './Client/cart.jsx'
-import CheckoutPage from './Client/checkout.jsx'
+import CheckoutPage from './Client/checkOut.jsx'
 import Footer from '../components/footer.jsx'
 import axios from 'axios'
 import ProductCard from "../components/productCard"
