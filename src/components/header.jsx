@@ -1,8 +1,8 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { FaShoppingCart, FaTimes } from "react-icons/fa";
+import { FaShoppingCart, FaTimes, FaSearch } from "react-icons/fa";
 import { GiHamburgerMenu } from 'react-icons/gi';
-import { FaUser, FaSignOutAlt, FaCog, FaSearch } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaCog } from "react-icons/fa";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import UserData from "./userData";
@@ -11,6 +11,7 @@ import { getCartCount } from '../utils/cart'; // Import cart utility
 export default function Header() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [showSearchResults, setShowSearchResults] = useState(false);
@@ -22,6 +23,7 @@ export default function Header() {
     const drawerRef = useRef(null);
     const profileMenuRef = useRef(null);
     const searchRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     // Update cart count
     const updateCartCount = () => {
@@ -65,6 +67,13 @@ export default function Header() {
         };
     }, []);
 
+    // Focus search input when opened
+    useEffect(() => {
+        if (isSearchOpen && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [isSearchOpen]);
+
     // Close drawers when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -75,11 +84,12 @@ export default function Header() {
                 setIsProfileMenuOpen(false);
             }
             if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setIsSearchOpen(false);
                 setShowSearchResults(false);
             }
         };
 
-        if (isDrawerOpen || isProfileMenuOpen || showSearchResults) {
+        if (isDrawerOpen || isProfileMenuOpen || isSearchOpen || showSearchResults) {
             document.addEventListener('mousedown', handleClickOutside);
             if (isDrawerOpen) {
                 document.body.style.overflow = 'hidden';
@@ -90,12 +100,13 @@ export default function Header() {
             document.removeEventListener('mousedown', handleClickOutside);
             document.body.style.overflow = 'unset';
         };
-    }, [isDrawerOpen, isProfileMenuOpen, showSearchResults]);
+    }, [isDrawerOpen, isProfileMenuOpen, isSearchOpen, showSearchResults]);
 
     // Close drawer when route changes
     useEffect(() => {
         setIsDrawerOpen(false);
         setIsProfileMenuOpen(false);
+        setIsSearchOpen(false);
         setShowSearchResults(false);
     }, [location]);
 
@@ -118,8 +129,9 @@ export default function Header() {
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate('/products');
+            navigate('/products?search=' + encodeURIComponent(searchQuery));
             setSearchQuery('');
+            setIsSearchOpen(false);
             setShowSearchResults(false);
         }
     };
@@ -127,6 +139,7 @@ export default function Header() {
     const handleProductClick = (product) => {
         navigate(`/overview/${product.productId}`);
         setSearchQuery('');
+        setIsSearchOpen(false);
         setShowSearchResults(false);
     };
 
@@ -197,28 +210,38 @@ export default function Header() {
 
                     {/* Right Section - Search, Cart, Profile */}
                     <div className="flex items-center gap-4">
-                        {/* Search Bar - Desktop */}
+                        {/* Search Icon and Bar - Desktop */}
                         <div className="relative hidden md:block" ref={searchRef}>
-                            <form onSubmit={handleSearchSubmit}>
-                                <input
-                                    type="text"
-                                    placeholder="Search products..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onFocus={() => searchQuery.trim() && setShowSearchResults(true)}
-                                    className="w-64 px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
+                            {!isSearchOpen ? (
                                 <button
-                                    type="submit"
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                                    onClick={() => setIsSearchOpen(true)}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                    aria-label="Open search"
                                 >
-                                    <FaSearch />
+                                    <FaSearch className="text-xl text-gray-700" />
                                 </button>
-                            </form>
+                            ) : (
+                                <form onSubmit={handleSearchSubmit} className="relative">
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        placeholder="Search products..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-64 px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                                    >
+                                        <FaSearch />
+                                    </button>
+                                </form>
+                            )}
                             
                             {/* Search Results Dropdown */}
-                            {showSearchResults && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                            {showSearchResults && isSearchOpen && (
+                                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 min-w-[300px]">
                                     {searchResults.length > 0 ? (
                                         searchResults.map((product) => (
                                             <button
@@ -269,6 +292,15 @@ export default function Header() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Mobile Search Icon */}
+                        <button
+                            onClick={() => setIsSearchOpen(!isSearchOpen)}
+                            className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            aria-label="Toggle search"
+                        >
+                            <FaSearch className="text-xl text-gray-700" />
+                        </button>
 
                         {/* Cart Icon with Dynamic Count */}
                         <Link
@@ -365,62 +397,65 @@ export default function Header() {
                     </div>
                 </nav>
 
-                {/* Mobile Search Bar - Below header on mobile */}
-                <div className="md:hidden px-4 py-2 bg-gray-50 border-t">
-                    <form onSubmit={handleSearchSubmit} className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <button
-                            type="submit"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
-                        >
-                            <FaSearch />
-                        </button>
-                    </form>
-                    
-                    {/* Mobile Search Results */}
-                    {showSearchResults && searchResults.length > 0 && (
-                        <div className="absolute left-4 right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
-                            {searchResults.map((product) => (
-                                <button
-                                    key={product._id || product.productId}
-                                    onClick={() => handleProductClick(product)}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {product.images && product.images[0] ? (
-                                            <img 
-                                                src={product.images[0]} 
-                                                alt={product.name}
-                                                className="w-10 h-10 object-cover rounded"
-                                            />
-                                        ) : (
-                                            <div className="w-10 h-10 bg-gray-200 rounded"></div>
-                                        )}
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-800">{product.name}</p>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-red-500 font-bold text-sm">
-                                                    Rs. {product.sellingPrice}
-                                                </span>
-                                                {product.labelledPrice && (
-                                                    <span className="text-gray-400 line-through text-xs">
-                                                        Rs. {product.labelledPrice}
+                {/* Mobile Search Bar - Conditionally shown */}
+                {isSearchOpen && (
+                    <div className="md:hidden px-4 py-2 bg-gray-50 border-t" ref={searchRef}>
+                        <form onSubmit={handleSearchSubmit} className="relative">
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            <button
+                                type="submit"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                            >
+                                <FaSearch />
+                            </button>
+                        </form>
+                        
+                        {/* Mobile Search Results */}
+                        {showSearchResults && searchResults.length > 0 && (
+                            <div className="absolute left-4 right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                                {searchResults.map((product) => (
+                                    <button
+                                        key={product._id || product.productId}
+                                        onClick={() => handleProductClick(product)}
+                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {product.images && product.images[0] ? (
+                                                <img 
+                                                    src={product.images[0]} 
+                                                    alt={product.name}
+                                                    className="w-10 h-10 object-cover rounded"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 bg-gray-200 rounded"></div>
+                                            )}
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-800">{product.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-red-500 font-bold text-sm">
+                                                        Rs. {product.sellingPrice}
                                                     </span>
-                                                )}
+                                                    {product.labelledPrice && (
+                                                        <span className="text-gray-400 line-through text-xs">
+                                                            Rs. {product.labelledPrice}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </header>
 
             {/* Mobile Drawer */}
