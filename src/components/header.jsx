@@ -6,7 +6,7 @@ import { FaUser, FaSignOutAlt, FaCog } from "react-icons/fa";
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import UserData from "./userData";
-import { getCartCount } from '../utils/cart'; // Import cart utility
+import { getCartCount } from '../utils/cart';
 
 export default function Header() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -22,7 +22,9 @@ export default function Header() {
     const location = useLocation();
     const drawerRef = useRef(null);
     const profileMenuRef = useRef(null);
-    const searchRef = useRef(null);
+    const searchContainerRef = useRef(null);
+    const desktopSearchRef = useRef(null);
+    const mobileSearchRef = useRef(null);
     const searchInputRef = useRef(null);
 
     // Update cart count
@@ -70,7 +72,9 @@ export default function Header() {
     // Focus search input when opened
     useEffect(() => {
         if (isSearchOpen && searchInputRef.current) {
-            searchInputRef.current.focus();
+            setTimeout(() => {
+                searchInputRef.current.focus();
+            }, 100);
         }
     }, [isSearchOpen]);
 
@@ -83,24 +87,27 @@ export default function Header() {
             if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
                 setIsProfileMenuOpen(false);
             }
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
+            
+            // Handle search closing
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setIsSearchOpen(false);
                 setShowSearchResults(false);
             }
         };
 
-        if (isDrawerOpen || isProfileMenuOpen || isSearchOpen || showSearchResults) {
-            document.addEventListener('mousedown', handleClickOutside);
-            if (isDrawerOpen) {
-                document.body.style.overflow = 'hidden';
-            }
+        document.addEventListener('mousedown', handleClickOutside);
+        
+        if (isDrawerOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.body.style.overflow = 'unset';
         };
-    }, [isDrawerOpen, isProfileMenuOpen, isSearchOpen, showSearchResults]);
+    }, [isDrawerOpen, isProfileMenuOpen]);
 
     // Close drawer when route changes
     useEffect(() => {
@@ -158,6 +165,59 @@ export default function Header() {
 
     const isActiveLink = (path) => location.pathname === path;
 
+    // Search Results Component
+    const SearchResultsDropdown = ({ results, query, onProductClick }) => (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+            {results.length > 0 ? (
+                results.map((product) => (
+                    <button
+                        key={product._id || product.productId}
+                        onClick={() => onProductClick(product)}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            {product.images && product.images[0] ? (
+                                <img 
+                                    src={product.images[0]} 
+                                    alt={product.name}
+                                    className="w-10 h-10 object-cover rounded"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://via.placeholder.com/40';
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                                    <FaSearch className="text-gray-400" />
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <p className="font-medium text-gray-800">{product.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-red-500 font-bold text-sm">
+                                        Rs. {product.sellingPrice}
+                                    </span>
+                                    {product.labelledPrice && (
+                                        <span className="text-gray-400 line-through text-xs">
+                                            Rs. {product.labelledPrice}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+                ))
+            ) : (
+                <div className="p-4 text-center text-gray-500">
+                    No products found for "{query}"
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <>
             {/* Overlay for mobile drawer */}
@@ -209,9 +269,9 @@ export default function Header() {
                     </div>
 
                     {/* Right Section - Search, Cart, Profile */}
-                    <div className="flex items-center gap-4">
-                        {/* Search Icon and Bar - Desktop */}
-                        <div className="relative hidden md:block" ref={searchRef}>
+                    <div className="flex items-center gap-4" ref={searchContainerRef}>
+                        {/* Desktop Search */}
+                        <div className="relative hidden md:block" ref={desktopSearchRef}>
                             {!isSearchOpen ? (
                                 <button
                                     onClick={() => setIsSearchOpen(true)}
@@ -221,73 +281,31 @@ export default function Header() {
                                     <FaSearch className="text-xl text-gray-700" />
                                 </button>
                             ) : (
-                                <form onSubmit={handleSearchSubmit} className="relative">
-                                    <input
-                                        ref={searchInputRef}
-                                        type="text"
-                                        placeholder="Search products..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-64 px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
-                                    >
-                                        <FaSearch />
-                                    </button>
-                                </form>
-                            )}
-                            
-                            {/* Search Results Dropdown */}
-                            {showSearchResults && isSearchOpen && (
-                                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 min-w-[300px]">
-                                    {searchResults.length > 0 ? (
-                                        searchResults.map((product) => (
-                                            <button
-                                                key={product._id || product.productId}
-                                                onClick={() => handleProductClick(product)}
-                                                className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    {product.images && product.images[0] ? (
-                                                        <img 
-                                                            src={product.images[0]} 
-                                                            alt={product.name}
-                                                            className="w-10 h-10 object-cover rounded"
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = 'https://via.placeholder.com/40';
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                                                            <FaSearch className="text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1">
-                                                        <p className="font-medium text-gray-800">{product.name}</p>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-red-500 font-bold text-sm">
-                                                                Rs. {product.sellingPrice}
-                                                            </span>
-                                                            {product.labelledPrice && (
-                                                                <span className="text-gray-400 line-through text-xs">
-                                                                    Rs. {product.labelledPrice}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs text-gray-500">
-                                                            {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <div className="p-4 text-center text-gray-500">
-                                            No products found for "{searchQuery}"
-                                        </div>
+                                <div className="relative">
+                                    <form onSubmit={handleSearchSubmit}>
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            placeholder="Search products..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-64 px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                                        >
+                                            <FaSearch />
+                                        </button>
+                                    </form>
+                                    
+                                    {/* Desktop Search Results */}
+                                    {showSearchResults && (
+                                        <SearchResultsDropdown 
+                                            results={searchResults}
+                                            query={searchQuery}
+                                            onProductClick={handleProductClick}
+                                        />
                                     )}
                                 </div>
                             )}
@@ -397,9 +415,9 @@ export default function Header() {
                     </div>
                 </nav>
 
-                {/* Mobile Search Bar - Conditionally shown */}
+                {/* Mobile Search Bar */}
                 {isSearchOpen && (
-                    <div className="md:hidden px-4 py-2 bg-gray-50 border-t" ref={searchRef}>
+                    <div className="md:hidden px-4 py-2 bg-gray-50 border-t relative" ref={mobileSearchRef}>
                         <form onSubmit={handleSearchSubmit} className="relative">
                             <input
                                 ref={searchInputRef}
@@ -418,7 +436,7 @@ export default function Header() {
                         </form>
                         
                         {/* Mobile Search Results */}
-                        {showSearchResults && searchResults.length > 0 && (
+                        {showSearchResults && (
                             <div className="absolute left-4 right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
                                 {searchResults.map((product) => (
                                     <button
@@ -452,6 +470,11 @@ export default function Header() {
                                         </div>
                                     </button>
                                 ))}
+                                {searchResults.length === 0 && searchQuery && (
+                                    <div className="p-4 text-center text-gray-500">
+                                        No products found for "{searchQuery}"
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
