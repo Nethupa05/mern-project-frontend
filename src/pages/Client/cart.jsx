@@ -1,83 +1,4 @@
-// import { BiMinus, BiPlus, BiTrash } from "react-icons/bi"
-// import { addToCart, getCart, getTotal, removeFromCart } from "../../utils/cart"
-// import { useState } from "react"
-// import { Link } from "react-router-dom"
-
-// export default function CartPage(){
-//     const [cart, setCart] = useState(getCart())
-
-//     return(
-//         <div className="w-full h-full flex flex-col items-center pt-4 relative">
-//             <div className="w-[300px] h-[80px] shadow-2xl absolute top-1 right-1 flex flex-col justify-center items-center">
-//                 <p className="text-2xl font-bold text-secondary">Total:
-//                     <span className="mx-2 font-bold text-accent text-2xl">
-//                         {getTotal().toFixed(2)}
-//                     </span>
-//                 </p>
-//                 <Link to="/checkout" state={
-//                     {
-//                         cart : cart,
-                        
-//                     }
-//                 } className="w-full h-[50px] bg-accent text-white text-2xl font-bold flex justify-center items-center hover:bg-secondary cursor-pointer">
-//                     Checkout
-//                 </Link> 
-//             </div>
-//             {
-//                 cart.map(
-//                     (item)=>{
-//                         return(
-//                             <div key={item.productId} className="w-[600px] h-[100px] my-4 bg-blue-200 rounded-tl-3xl rounded-bl-3xl bg-primary shadow-2xl flex flex-row relative items-center">
-//                                 <img src={item.image} className="w-[100px] h-[100px] object-cover rounded-3xl"/>
-//                                 <div className="w-[250px] h-full flex flex-col justify-center items-start pl-4">
-//                                     <h1 className="text-xl text-secondary font-semibold">{item.name}</h1>
-//                                     <h1 className="text-md text-secondary font-semibold">{item.productId}</h1>
-//                                     {
-//                                         item.labelledPrice > item.sellingPrice ?
-//                                         <div>
-//                                             <span className="text-md mx-1 text-gray-500 line-through">{item.labelledPrice.toFixed(2)}</span>
-//                                             <span className="text-md mx-1 font-bold text-accent">{item.sellingPrice.toFixed(2)}</span>
-//                                         </div>
-//                                         :<span className="text-md mx-1 font-bold text-accent">{item.sellingPrice.toFixed(2)}</span>
-//                                     }                                        
-//                                 </div>
-//                                 <div className="max-w-[100px] w-[100px] h-full flex flex-row justify-between items-center">
-//                                     <button className="text-white font-bold rounded-xl hover:bg-secondary text-2xl cursor-pointer aspect-square bg-accent" onClick={()=>{
-//                                         addToCart(item , -1)
-//                                         setCart(getCart())
-//                                     }}><BiMinus/></button>
-//                                     <h1 className="text-xl text-secondary font-semibold h-full flex items-center">{item.qty}</h1>
-//                                     <button className="text-white font-bold rounded-xl hover:bg-secondary text-2xl cursor-pointer aspect-square bg-accent" onClick={()=>{
-//                                         addToCart(item , 1)
-//                                         setCart(getCart())
-//                                     }}><BiPlus/></button>
-//                                 </div>
-//                                 {/* total */}
-//                                 <div className="w-[200px] h-full flex flex-col justify-center items-center">
-//                                     <h1 className="text-2xl text-secondary font-semibold">{(item.sellingPrice*item.qty).toFixed(2)}</h1>
-//                                 </div>
-//                                 <button className="absolute hover:bg-red-600 text-red-600 hover:text-white cursor-pointer rounded-full p-2 right-[-40px]" onClick={()=>{
-//                                     removeFromCart(item.productId)
-//                                     setCart(getCart())
-//                                 }}>
-//                                     <BiTrash/>
-//                                 </button>
-//                             </div>
-//                         )
-//                     }
-//                 )
-//             }
-//         </div>
-//     )
-// }
-
-
-
-
-
-
-
-import { BiMinus, BiPlus, BiTrash } from "react-icons/bi"
+import { BiMinus, BiPlus, BiTrash, BiShoppingBag, BiArrowBack } from "react-icons/bi"
 import { addToCart, getCart, getTotal, removeFromCart } from "../../utils/cart"
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
@@ -94,232 +15,257 @@ export default function CartPage(){
         return `LKR ${amount.toFixed(2)}`
     }
 
-    return(
-        <div className="w-full min-h-screen bg-white">
-            {/* Desktop View - Hidden on mobile */}
-            <div className="hidden md:block w-full h-full pt-4 relative">
-                {/* Desktop Total Card */}
-                <div className="w-[300px] h-[80px] shadow-2xl absolute top-1 right-1 flex flex-col justify-center items-center bg-white z-10">
-                    <p className="text-2xl font-bold text-secondary">
-                        Total:
-                        <span className="mx-2 font-bold text-accent text-2xl">
-                            {formatCurrency(total)}
-                        </span>
-                    </p>
-                    <Link 
-                        to="/checkout" 
-                        state={{ cart: cart }}
-                        className="w-full h-[50px] bg-accent text-white text-2xl font-bold flex justify-center items-center hover:bg-secondary cursor-pointer"
-                    >
-                        Checkout
-                    </Link>
-                </div>
+    // Calculate savings
+    const calculateSavings = () => {
+        return cart.reduce((acc, item) => {
+            if (item.labelledPrice > item.sellingPrice) {
+                return acc + ((item.labelledPrice - item.sellingPrice) * item.qty)
+            }
+            return acc
+        }, 0)
+    }
 
-                {/* Desktop Cart Items */}
-                <div className="w-full flex flex-col items-center pt-4">
-                    {cart.length === 0 ? (
-                        <div className="text-center py-10">
-                            <p className="text-xl text-gray-600">Your cart is empty</p>
-                            <Link to="/products" className="text-accent hover:underline mt-2 inline-block">
-                                Continue Shopping
+    const savings = calculateSavings()
+
+    return(
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            {/* Header */}
+            <div className="bg-white shadow-sm sticky top-0 z-10">
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Link 
+                                to="/products" 
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <BiArrowBack className="text-xl text-gray-600" />
                             </Link>
+                            <h1 className="text-2xl font-bold text-accent">Shopping Cart</h1>
                         </div>
-                    ) : (
-                        cart.map((item) => {
-                            return (
-                                <div 
-                                    key={item.productId} 
-                                    className="w-[600px] relative my-4"
-                                >
-                                    <div className="w-[600px] h-[100px] bg-blue-200 rounded-tl-3xl rounded-bl-3xl bg-primary shadow-2xl flex flex-row relative items-center">
-                                        <img 
-                                            src={item.image} 
-                                            alt={item.name}
-                                            className="w-[100px] h-[100px] object-cover rounded-3xl"
-                                        />
-                                        <div className="w-[250px] h-full flex flex-col justify-center items-start pl-4">
-                                            <h1 className="text-xl text-secondary font-semibold">{item.name}</h1>
-                                            <h1 className="text-md text-secondary font-semibold">{item.productId}</h1>
-                                            {item.labelledPrice > item.sellingPrice ? (
-                                                <div>
-                                                    <span className="text-md mx-1 text-gray-500 line-through">
-                                                        {formatCurrency(item.labelledPrice)}
-                                                    </span>
-                                                    <span className="text-md mx-1 font-bold text-accent">
-                                                        {formatCurrency(item.sellingPrice)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-md mx-1 font-bold text-accent">
-                                                    {formatCurrency(item.sellingPrice)}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="max-w-[100px] w-[100px] h-full flex flex-row justify-between items-center px-2">
-                                            <button 
-                                                className="text-white font-bold rounded-xl hover:bg-secondary text-2xl cursor-pointer aspect-square bg-accent w-8 h-8 flex items-center justify-center"
-                                                onClick={() => {
-                                                    addToCart(item, -1)
-                                                    setCart(getCart())
-                                                }}
-                                            >
-                                                <BiMinus />
-                                            </button>
-                                            <span className="text-xl text-secondary font-semibold">
-                                                {item.qty}
-                                            </span>
-                                            <button 
-                                                className="text-white font-bold rounded-xl hover:bg-secondary text-2xl cursor-pointer aspect-square bg-accent w-8 h-8 flex items-center justify-center"
-                                                onClick={() => {
-                                                    addToCart(item, 1)
-                                                    setCart(getCart())
-                                                }}
-                                            >
-                                                <BiPlus />
-                                            </button>
-                                        </div>
-                                        <div className="w-[150px] h-full flex flex-col justify-center items-center">
-                                            <h1 className="text-2xl text-secondary font-semibold">
-                                                {formatCurrency(item.sellingPrice * item.qty)}
-                                            </h1>
-                                        </div>
-                                        <button 
-                                            className="absolute hover:bg-red-600 text-red-600 hover:text-white cursor-pointer rounded-full p-2 right-[-40px] transition-colors"
-                                            onClick={() => {
-                                                removeFromCart(item.productId)
-                                                setCart(getCart())
-                                            }}
-                                        >
-                                            <BiTrash size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            )
-                        })
-                    )}
+                        <div className="flex items-center gap-2">
+                            <BiShoppingBag className="text-accent text-xl" />
+                            <span className="bg-accent text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                                {cart.length}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Mobile View - Hidden on desktop */}
-            <div className="md:hidden w-full min-h-screen bg-white pt-4">
-                {/* Mobile Total Card */}
-                <div className="w-full px-4 mb-4 sticky top-0 z-10 bg-white shadow-lg py-3">
-                    <div className="flex justify-between items-center">
-                        <p className="text-xl font-bold text-secondary">
-                            Total: 
-                            <span className="ml-2 font-bold text-accent text-xl">
-                                {formatCurrency(total)}
-                            </span>
-                        </p>
+            {/* Main Content */}
+            <div className="container mx-auto px-4 py-6">
+                {cart.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                        <div className="bg-white rounded-full p-8 shadow-lg mb-6">
+                            <BiShoppingBag className="text-6xl text-gray-300" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
+                        <p className="text-gray-500 mb-6 text-center">Looks like you haven't added anything to your cart yet</p>
                         <Link 
-                            to="/checkout" 
-                            state={{ cart: cart }}
-                            className="bg-accent text-white px-6 py-2 rounded-lg text-lg font-bold hover:bg-secondary cursor-pointer transition-colors"
+                            to="/products" 
+                            className="bg-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-accent/90 transition-colors shadow-lg hover:shadow-xl"
                         >
-                            Checkout
+                            Start Shopping
                         </Link>
                     </div>
-                </div>
+                ) : (
+                    <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Cart Items - Left Column */}
+                        <div className="lg:col-span-2 space-y-4">
+                            {cart.map((item) => {
+                                const itemTotal = item.sellingPrice * item.qty
+                                const hasDiscount = item.labelledPrice > item.sellingPrice
+                                const discountPercentage = hasDiscount 
+                                    ? Math.round(((item.labelledPrice - item.sellingPrice) / item.labelledPrice) * 100)
+                                    : 0
 
-                {/* Mobile Cart Items */}
-                <div className="w-full flex flex-col items-center px-4">
-                    {cart.length === 0 ? (
-                        <div className="text-center py-10">
-                            <p className="text-xl text-gray-600">Your cart is empty</p>
-                            <Link to="/products" className="text-accent hover:underline mt-2 inline-block">
-                                Continue Shopping
-                            </Link>
-                        </div>
-                    ) : (
-                        cart.map((item) => {
-                            return (
-                                <div 
-                                    key={item.productId} 
-                                    className="w-full bg-primary shadow-lg rounded-lg p-4 mb-4"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <img 
-                                            src={item.image} 
-                                            alt={item.name}
-                                            className="w-[80px] h-[80px] object-cover rounded-lg"
-                                        />
-                                        <div className="flex-1">
-                                            <h1 className="text-base text-secondary font-semibold">{item.name}</h1>
-                                            <p className="text-xs text-gray-500 mb-2">{item.productId}</p>
-                                            
-                                            {/* Price */}
-                                            {item.labelledPrice > item.sellingPrice ? (
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <span className="text-sm text-gray-400 line-through">
-                                                        {formatCurrency(item.labelledPrice)}
-                                                    </span>
-                                                    <span className="text-base font-bold text-accent">
-                                                        {formatCurrency(item.sellingPrice)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-base font-bold text-accent block mb-3">
-                                                    {formatCurrency(item.sellingPrice)}
-                                                </span>
-                                            )}
-                                            
-                                            {/* Quantity Controls and Item Total */}
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <button 
-                                                        className="text-white font-bold rounded-lg hover:bg-secondary text-lg cursor-pointer w-8 h-8 bg-accent flex items-center justify-center"
-                                                        onClick={() => {
-                                                            addToCart(item, -1)
-                                                            setCart(getCart())
+                                return (
+                                    <div 
+                                        key={item.productId} 
+                                        className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                                    >
+                                        <div className="p-4">
+                                            <div className="flex gap-4">
+                                                {/* Product Image */}
+                                                <div className="w-24 h-24 flex-shrink-0">
+                                                    <img 
+                                                        src={item.image} 
+                                                        alt={item.name}
+                                                        className="w-full h-full object-cover rounded-lg"
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://via.placeholder.com/96?text=No+Image'
                                                         }}
-                                                    >
-                                                        <BiMinus />
-                                                    </button>
-                                                    <span className="text-lg text-secondary font-semibold">
-                                                        {item.qty}
-                                                    </span>
-                                                    <button 
-                                                        className="text-white font-bold rounded-lg hover:bg-secondary text-lg cursor-pointer w-8 h-8 bg-accent flex items-center justify-center"
-                                                        onClick={() => {
-                                                            addToCart(item, 1)
-                                                            setCart(getCart())
-                                                        }}
-                                                    >
-                                                        <BiPlus />
-                                                    </button>
+                                                    />
                                                 </div>
-                                                <span className="text-lg font-bold text-accent">
-                                                    {formatCurrency(item.sellingPrice * item.qty)}
-                                                </span>
+
+                                                {/* Product Details */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <h3 className="font-bold text-gray-800 text-base sm:text-lg truncate">
+                                                                {item.name}
+                                                            </h3>
+                                                            <p className="text-xs text-gray-500 mb-2">{item.productId}</p>
+                                                            
+                                                            {/* Price */}
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                {hasDiscount ? (
+                                                                    <>
+                                                                        <span className="text-sm text-gray-400 line-through">
+                                                                            {formatCurrency(item.labelledPrice)}
+                                                                        </span>
+                                                                        <span className="text-lg font-bold text-accent">
+                                                                            {formatCurrency(item.sellingPrice)}
+                                                                        </span>
+                                                                        <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                                                                            {discountPercentage}% OFF
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="text-lg font-bold text-accent">
+                                                                        {formatCurrency(item.sellingPrice)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Delete Button */}
+                                                        <button 
+                                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                            onClick={() => {
+                                                                removeFromCart(item.productId)
+                                                                setCart(getCart())
+                                                            }}
+                                                        >
+                                                            <BiTrash size={20} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Quantity Controls and Item Total */}
+                                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                                        <div className="flex items-center gap-2">
+                                                            <button 
+                                                                className="w-8 h-8 bg-gray-100 hover:bg-accent hover:text-white rounded-lg transition-colors flex items-center justify-center text-gray-600"
+                                                                onClick={() => {
+                                                                    addToCart(item, -1)
+                                                                    setCart(getCart())
+                                                                }}
+                                                                disabled={item.qty <= 1}
+                                                            >
+                                                                <BiMinus />
+                                                            </button>
+                                                            <span className="w-8 text-center font-semibold">
+                                                                {item.qty}
+                                                            </span>
+                                                            <button 
+                                                                className="w-8 h-8 bg-gray-100 hover:bg-accent hover:text-white rounded-lg transition-colors flex items-center justify-center text-gray-600"
+                                                                onClick={() => {
+                                                                    addToCart(item, 1)
+                                                                    setCart(getCart())
+                                                                }}
+                                                            >
+                                                                <BiPlus />
+                                                            </button>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-xs text-gray-500">Item Total</p>
+                                                            <p className="text-lg font-bold text-accent">
+                                                                {formatCurrency(itemTotal)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        
-                                        {/* Delete Button */}
-                                        <button 
-                                            className="text-red-600 hover:bg-red-600 hover:text-white cursor-pointer rounded-full p-1.5 transition-colors self-start"
-                                            onClick={() => {
-                                                removeFromCart(item.productId)
-                                                setCart(getCart())
-                                            }}
-                                        >
-                                            <BiTrash size={18} />
-                                        </button>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Order Summary - Right Column */}
+                        <div className="lg:col-span-1">
+                            <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+                                <h2 className="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
+                                
+                                <div className="space-y-3 mb-4">
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Subtotal ({cart.length} items)</span>
+                                        <span>{formatCurrency(total)}</span>
+                                    </div>
+                                    
+                                    {savings > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span>Total Savings</span>
+                                            <span>- {formatCurrency(savings)}</span>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Shipping</span>
+                                        <span className="text-green-600">Free</span>
+                                    </div>
+                                    
+                                    <div className="border-t border-gray-200 my-3 pt-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-lg font-bold text-gray-800">Total</span>
+                                            <span className="text-2xl font-bold text-accent">
+                                                {formatCurrency(total)}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 text-right mt-1">
+                                            Inclusive of all taxes
+                                        </p>
                                     </div>
                                 </div>
-                            )
-                        })
-                    )}
-                </div>
 
-                {/* Continue Shopping Link for Mobile */}
-                {cart.length > 0 && (
-                    <div className="text-center mt-2 pb-6">
-                        <Link to="/products" className="text-accent hover:underline">
-                            Continue Shopping
-                        </Link>
+                                {/* Checkout Button */}
+                                <Link 
+                                    to="/checkout" 
+                                    state={{ cart: cart }}
+                                    className="block w-full bg-accent text-white text-center py-3 rounded-lg font-bold hover:bg-accent/90 transition-colors shadow-lg hover:shadow-xl mb-3"
+                                >
+                                    Proceed to Checkout
+                                </Link>
+
+                                {/* Continue Shopping */}
+                                <Link 
+                                    to="/products" 
+                                    className="block w-full text-center text-accent hover:underline"
+                                >
+                                    Continue Shopping
+                                </Link>
+
+                                {/* Payment Methods */}
+                                <div className="mt-6 pt-4 border-t border-gray-200">
+                                    <p className="text-xs text-gray-500 text-center mb-2">
+                                        We accept:
+                                    </p>
+                                    <div className="flex justify-center gap-3">
+                                        <span className="text-sm font-semibold text-gray-600">Visa</span>
+                                        <span className="text-sm font-semibold text-gray-600">Mastercard</span>
+                                        <span className="text-sm font-semibold text-gray-600">Amex</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
+
+            {/* Recently Viewed (Optional) */}
+            {cart.length > 0 && (
+                <div className="bg-white mt-8 py-6">
+                    <div className="container mx-auto px-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">You might also like</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {/* This would be populated with recommended products */}
+                            <div className="text-center text-gray-500 text-sm">
+                                <p>Recommendations based on your cart</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
