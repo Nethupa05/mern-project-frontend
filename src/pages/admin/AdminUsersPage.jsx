@@ -12,7 +12,6 @@ import {
     FaEnvelope,
     FaPhone,
     FaCalendarAlt,
-    FaShoppingBag,
     FaTimes,
     FaUserEdit,
     FaLock,
@@ -46,7 +45,7 @@ export default function AdminUsersPage({ isDarkMode }) {
                 (user) =>
                     `${user.firstName} ${user.lastName}`.trim()?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    user.phone?.includes(searchTerm)
+                    (user.phone && user.phone.includes(searchTerm))
             )
         }
 
@@ -81,6 +80,29 @@ export default function AdminUsersPage({ isDarkMode }) {
                         (e.response?.data?.message || "Unknown error")
                 )
                 setIsLoading(false)
+            })
+    }
+
+    function fetchUserDetails(userId) {
+        const token = localStorage.getItem("token")
+        if (!token) {
+            toast.error("Please login first")
+            return
+        }
+
+        axios
+            .get(import.meta.env.VITE_BACKEND_URL + "/api/users/" + userId, {
+                headers: { Authorization: "Bearer " + token },
+            })
+            .then((res) => {
+                setSelectedUser(res.data)
+                setShowUserDetails(true)
+            })
+            .catch((e) => {
+                toast.error(
+                    "Error fetching user details: " +
+                        (e.response?.data?.message || "Unknown error")
+                )
             })
     }
 
@@ -457,10 +479,10 @@ export default function AdminUsersPage({ isDarkMode }) {
                                                             `${user.firstName} ${user.lastName}`.trim()
                                                         )} shadow`}
                                                     >
-                                                        {user.profileImage ? (
+                                                        {user.img ? (
                                                             <img
                                                                 src={
-                                                                    user.profileImage
+                                                                    user.img
                                                                 }
                                                                 alt={`${user.firstName} ${user.lastName}`.trim()}
                                                                 className="w-9 h-9 rounded-full object-cover"
@@ -498,12 +520,6 @@ export default function AdminUsersPage({ isDarkMode }) {
                                                             {user.email}
                                                         </p>
                                                     </div>
-                                                    {user.googleId && (
-                                                        <FaGoogle
-                                                            className="text-red-400 text-xs flex-shrink-0"
-                                                            title="Google Account"
-                                                        />
-                                                    )}
                                                 </div>
                                             </td>
 
@@ -583,12 +599,7 @@ export default function AdminUsersPage({ isDarkMode }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedUser(
-                                                                user
-                                                            )
-                                                            setShowUserDetails(
-                                                                true
-                                                            )
+                                                            fetchUserDetails(user._id)
                                                         }}
                                                         className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all duration-300"
                                                         title="View Details"
@@ -685,22 +696,22 @@ export default function AdminUsersPage({ isDarkMode }) {
                                 <div className="flex items-center gap-4">
                                     <div
                                         className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl text-white bg-gradient-to-br ${getAvatarColor(
-                                            selected`${user.firstName} ${user.lastName}`.trim()
+                                            `${selectedUser.firstName} ${selectedUser.lastName}`.trim()
                                         )} shadow-lg border-2 border-white/30`}
                                     >
-                                        {selectedUser.profileImage ? (
+                                        {selectedUser.img ? (
                                             <img
-                                                src={selectedUser.profileImage}
-                                                alt={selected`${user.firstName} ${user.lastName}`.trim()}
+                                                src={selectedUser.img}
+                                                alt={`${selectedUser.firstName} ${selectedUser.lastName}`.trim()}
                                                 className="w-16 h-16 rounded-full object-cover"
                                             />
                                         ) : (
-                                            getInitials(selected`${user.firstName} ${user.lastName}`.trim())
+                                            getInitials(`${selectedUser.firstName} ${selectedUser.lastName}`.trim())
                                         )}
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-white">
-                                            {selected`${user.firstName} ${user.lastName}`.trim() || "Unknown"}
+                                            {`${selectedUser.firstName} ${selectedUser.lastName}`.trim() || "Unknown"}
                                         </h2>
                                         <p className="text-blue-200 text-sm">
                                             {selectedUser.email}
@@ -715,12 +726,6 @@ export default function AdminUsersPage({ isDarkMode }) {
                                             >
                                                 {selectedUser.role}
                                             </span>
-                                            {selectedUser.googleId && (
-                                                <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <FaGoogle className="text-xs" />
-                                                    Google
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -845,21 +850,6 @@ export default function AdminUsersPage({ isDarkMode }) {
                                                     : "Active"}
                                             </span>
                                         </p>
-                                        {selectedUser.lastLogin && (
-                                            <p
-                                                className={`text-sm flex items-center gap-2 ${
-                                                    isDarkMode
-                                                        ? "text-gray-300"
-                                                        : "text-gray-600"
-                                                }`}
-                                            >
-                                                <FaCalendarAlt className="text-blue-500 flex-shrink-0" />
-                                                Last login:{" "}
-                                                {formatDate(
-                                                    selectedUser.lastLogin
-                                                )}
-                                            </p>
-                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -990,7 +980,7 @@ export default function AdminUsersPage({ isDarkMode }) {
                             >
                                 Are you sure you want to delete{" "}
                                 <span className="font-semibold text-red-500">
-                                    {userToDelete.name || userToDelete.email}
+                                    {`${userToDelete.firstName} ${userToDelete.lastName}`.trim() || userToDelete.email}
                                 </span>
                                 ? This action cannot be undone.
                             </p>
